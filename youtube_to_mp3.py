@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 from youtube_dl import YoutubeDL
 from pprint import pprint
-import requests
-import json
-import os
 from utils import *
+import sys
+import os
 
 
 options = {
@@ -13,16 +12,16 @@ options = {
         'key': 'FFmpegExtractAudio',
         'preferredcodec': 'mp3',
         'preferredquality': '192',
-    }],     # convert to mp3
+    }],
     'outtmpl': '%(id)s.%(ext)s',        # name the file the ID of the video
     'noplaylist': True,
 }
 
 ydl = YoutubeDL(options)
 r = None
-url = "https://www.youtube.com/watch?v=XbGs_qK2PQA"
+url = str(sys.argv[1:][0])
 with ydl:
-    r = ydl.extract_info(url, download=False)
+    r = ydl.extract_info(url, download=True)
     artist, track = findTrackAndArtist(r.get("title"))
     if artist == None or track == None:
         print("Sorry I couldn't find artist and track in title")
@@ -30,7 +29,12 @@ with ydl:
         artist = input("Artist Name: ")
         track = input('Track Name: ')
         os.system(
-            'node index.js --artist="{}" --track="{}" --file="{}".mp3 --id="{}"'.format(artist, track, r.get("id"), r.get("id")))
+            'node index.js --artist="{}" --track="{}" --file="{}.mp3"'.format(artist, track, r.get("id")))
     else:
-        os.system(
-            'node index.js --artist="{}" --track="{}" --file="{}".mp3 --id="{}"'.format(artist, track, r.get("id"), r.get("id")))
+        if "," in artist:
+            print("I couldn't get the main artist")
+            print("So please can you give it to me ^_^")
+            artist = input("Artist name: ")
+        else:
+            os.system(
+                'node index.js --artist="{}" --track="{}" --file="{}.mp3"'.format(artist, track, r.get("id")))
