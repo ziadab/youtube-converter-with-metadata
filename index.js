@@ -2,15 +2,14 @@ const argv = require("yargs").argv;
 const axios = require("axios");
 const ID3Writer = require("browser-id3-writer");
 const fs = require("fs");
-const readline = require("readline").createInterface({
-  input: process.stdin
-});
+const readline = require("readline-sync");
 
 const file = argv.file;
 var artist = argv.artist.trim();
 var track = argv.track.trim();
 const type = argv.type.trim();
 const youtube_title = argv.youtubeTitle.trim();
+var trying = 0;
 
 async function getBuffer(link) {
   return axios
@@ -81,6 +80,12 @@ async function main() {
 
     fs.unlinkSync(file);
   } else {
+    console.log("Sorry I couldn't find artist and track in title");
+    console.log("So can u give it to me please");
+    artist = readline.question("Artist Name: ").trim();
+    track = readline.question("Track Name: ").trim();
+    ++trying;
+    main();
   }
 }
 
