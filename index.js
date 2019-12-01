@@ -2,11 +2,15 @@ const argv = require("yargs").argv;
 const axios = require("axios");
 const ID3Writer = require("browser-id3-writer");
 const fs = require("fs");
+const readline = require("readline").createInterface({
+  input: process.stdin
+});
 
 const file = argv.file;
 var artist = argv.artist.trim();
 var track = argv.track.trim();
-//console.log([file, artist, track]);
+const type = argv.type.trim();
+const youtube_title = argv.youtubeTitle.trim();
 
 async function getBuffer(link) {
   return axios
@@ -15,51 +19,69 @@ async function getBuffer(link) {
 }
 
 async function main() {
-  const link = `https://api.deezer.com/search?q=${artist} ${track}`;
+  // create output folder
+  fs.mkdirSync("songs", { recursive: true });
+
+  // getting data
+  const link = encodeURI(`https://api.deezer.com/search?q=${artist} ${track}`);
   const res = await axios.get(link);
-  //console.log(link);
+
+  // check of res bcs it giving me headache in test
   const data = res.data.data[0];
+  const total = res.data.total;
 
-  let coverPath;
-  if (!data.album.hasOwnProperty("picture")) {
-    if (!data.album.hasOwnProperty("cover_xl")) {
-      coverPath = data.album.cover_xl;
+  if (total > 0) {
+    // checking images
+    let coverPath;
+    if (!data.album.hasOwnProperty("picture")) {
+      if (!data.album.hasOwnProperty("cover_xl")) {
+        coverPath = data.album.cover_xl;
+      } else {
+        coverPath = data.album.cover_medium; // dfntly exsists (thts bad)
+      }
+    }
+
+    // Sure that will not change between track and album
+    const coverBuffer = await getBuffer(coverPath);
+    const songBuffer = fs.readFileSync(file);
+    const artisto = data.artist.name;
+    const albumName = data.album.title;
+
+    // ALbum Taking album title or track title
+    let title;
+    if (type == "track") {
+      title = data.title;
     } else {
-      coverPath = data.album.cover_medium; // dfntly exsists (thts bad)
+      title = data.album.title;
     }
+
+    const writer = new ID3Writer(songBuffer);
+    writer
+      .setFrame("APIC", {
+        type: 3,
+        data: coverBuffer,
+        description: "https://github.com/ziadab"
+      })
+      .setFrame("TIT2", title)
+      .setFrame("TALB", albumName)
+      .setFrame("TPE1", [artisto]);
+
+    writer.addTag();
+    const taggedSongBuffer = Buffer.from(writer.arrayBuffer);
+    fs.writeFile(
+      `./songs/${artisto.replace(/[^\w\s]/gi, "")} - ${title.replace(
+        /[^\w\s]/gi,
+        ""
+      )}.mp3`,
+      taggedSongBuffer,
+      err => {
+        if (err) throw err;
+      }
+    );
+
+    fs.unlinkSync(file);
+  } else {
   }
-
-  const title = data.title;
-  const artisto = data.artist.name;
-  const albumName = data.album.title;
-  const coverBuffer = await getBuffer(coverPath);
-  const songBuffer = fs.readFileSync(file);
-
-  const writer = new ID3Writer(songBuffer);
-  writer
-    .setFrame("APIC", {
-      type: 3,
-      data: coverBuffer,
-      description: "Super picture"
-    })
-    .setFrame("TIT2", title)
-    .setFrame("TALB", albumName)
-    .setFrame("TPE1", [artisto]);
-
-  writer.addTag();
-  const taggedSongBuffer = Buffer.from(writer.arrayBuffer);
-  fs.writeFile(
-    `${artisto.replace(/[^\w\s]/gi, "")} - ${title.replace(
-      /[^\w\s]/gi,
-      ""
-    )}.mp3`,
-    taggedSongBuffer,
-    err => {
-      if (err) throw err;
-    }
-  );
-
-  fs.unlinkSync(file);
 }
 
 main();

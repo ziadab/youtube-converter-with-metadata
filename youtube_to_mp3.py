@@ -29,7 +29,7 @@ with ydl:
         artist = input("Artist Name: ")
         track = input('Track Name: ')
         os.system(
-            'node index.js --artist="{}" --track="{}" --file="{}.mp3"'.format(artist, track, r.get("id")))
+            'node index.js --youtubeTitle="{}" --artist="{}" --track="{}" --file="{}.mp3" --type={}'.format(r.get("title"), artist, track, r.get("id"), getType(r.get('title'))))
     else:
         if "," in artist:
             print("I couldn't get the main artist")
@@ -37,4 +37,4 @@ with ydl:
             artist = input("Artist name: ")
         else:
             os.system(
-                'node index.js --artist="{}" --track="{}" --file="{}.mp3"'.format(artist, track, r.get("id")))
+                'node index.js --youtubeTitle="{}" --artist="{}" --track="{}" --file="{}.mp3" --type={}'.format(r.get("title"), artist, track, r.get("id"), getType(r.get('title'))))
