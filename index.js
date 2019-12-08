@@ -22,37 +22,25 @@ async function main() {
   fs.mkdirSync("songs", { recursive: true });
 
   // getting data
-  const link = encodeURI(`https://api.deezer.com/search?q=${artist} ${track}`);
+  const link = encodeURI(
+    `https://spotify-grabber.herokuapp.com/?title=${artist} ${track}&type=${type}`
+  );
   const res = await axios.get(link);
 
   // check of res bcs it giving me headache in test
-  const data = res.data.data[0];
-  const total = res.data.total;
+  // const data = res.data.data[0];
+  // const total = res.data.total;
+  const data = res.data;
+  const status = res.status;
 
-  if (total > 0) {
-    // checking images
-    let coverPath;
-    if (!data.album.hasOwnProperty("picture")) {
-      if (!data.album.hasOwnProperty("cover_xl")) {
-        coverPath = data.album.cover_xl;
-      } else {
-        coverPath = data.album.cover_medium; // dfntly exsists (thts bad)
-      }
-    }
-
+  if (status == 200) {
     // Sure that will not change between track and album
-    const coverBuffer = await getBuffer(coverPath);
+    const coverBuffer = await getBuffer(data.albumCover);
     const songBuffer = fs.readFileSync(file);
-    const artisto = data.artist.name;
-    const albumName = data.album.title;
-
-    // ALbum Taking album title or track title
-    let title;
-    if (type == "track") {
-      title = data.title;
-    } else {
-      title = data.album.title;
-    }
+    const artist = data.artists;
+    const albumName = data.albumName;
+    const title = data.title;
+    const [year, mounth, day] = data.releaseDay.split("-");
 
     const writer = new ID3Writer(songBuffer);
     writer
@@ -63,12 +51,14 @@ async function main() {
       })
       .setFrame("TIT2", title)
       .setFrame("TALB", albumName)
-      .setFrame("TPE1", [artisto]);
+      .setFrame("TPE1", artist)
+      .setFrame("TYER", parseInt(year))
+      .setFrame("TRCK", `${day}/${mounth}`);
 
     writer.addTag();
     const taggedSongBuffer = Buffer.from(writer.arrayBuffer);
     fs.writeFile(
-      `./songs/${artisto.replace(/[^\w\s]/gi, "")} - ${title.replace(
+      `./songs/${artist[0].replace(/[^\w\s]/gi, "")} - ${title.replace(
         /[^\w\s]/gi,
         ""
       )}.mp3`,
@@ -80,12 +70,18 @@ async function main() {
 
     fs.unlinkSync(file);
   } else {
-    console.log("Sorry I couldn't find artist and track in title");
-    console.log("So can u give it to me please");
-    artist = readline.question("Artist Name: ").trim();
-    track = readline.question("Track Name: ").trim();
-    ++trying;
-    main();
+    if (trying == 0) {
+      console.log("Sorry I couldn't find artist and track in title");
+      console.log("So can u give it to me please");
+      artist = readline.question("Artist Name: ").trim();
+      track = readline.question("Track Name: ").trim();
+      trying++;
+      main();
+    } else {
+      console.log("Sorry nothing mush :'(");
+      fs.writeFileSync(`${youtube_title}.mp3`, songBuffer);
+      fs.unlinkSync(file);
+    }
   }
 }
 
