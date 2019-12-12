@@ -22,7 +22,10 @@ r = None
 url = str(sys.argv[1:][0])
 with ydl:
     r = ydl.extract_info(url, download=True)
-    artist, track = findTrackAndArtist(r.get("title"))
+    try:
+        artist, track = findTrackAndArtist(r.get("title"))
+    except:
+        artist, track = None, None
     if artist == None or track == None:
         print("Sorry I couldn't find artist and track in title")
         print("So please can u give me it to put the data on it ?")
