@@ -77,9 +77,9 @@ async function main() {
     // Sure that will not change between track and album
     const coverBuffer = await getBuffer(data.albumCover);
     const songBuffer = fs.readFileSync(file);
-    var artist = data.artists;
+    const artist = data.artists;
     const albumName = data.albumName;
-    var title = data.title;
+    const title = data.title;
     const [year, mounth, day] = data.releaseDay.split("-");
 
     const writer = new ID3Writer(songBuffer);
@@ -97,12 +97,28 @@ async function main() {
 
     writer.addTag();
     const taggedSongBuffer = Buffer.from(writer.arrayBuffer);
-    artist = artist[0].replace(/[^\w\s]/gi, "");
-    title = title.replace(/[^\w\s]/gi, "");
-    console.log(`'title'`, typeof title);
-    fs.writeFile(`./songs/${artist} - ${title}.mp3`, taggedSongBuffer, err => {
-      if (err) throw err;
-    });
+    var artist_name = artist[0].replace(/[^\w\s]/gi, "").trim();
+    var title_name = title.replace(/[^\w\s]/gi, "").trim();
+
+    if (artist_name == "") {
+      artist_name = Math.random()
+        .toString(36)
+        .substring(7);
+    }
+
+    if (title_name == "") {
+      title_name = Math.random()
+        .toString(36)
+        .substring(7);
+    }
+
+    fs.writeFile(
+      `./songs/${artist_name} - ${title_name}.mp3`,
+      taggedSongBuffer,
+      err => {
+        if (err) throw err;
+      }
+    );
 
     fs.unlinkSync(file);
   } else {
