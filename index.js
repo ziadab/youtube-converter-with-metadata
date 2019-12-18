@@ -11,6 +11,24 @@ const type = argv.type.trim();
 const youtube_title = argv.youtubeTitle.trim();
 var trying = 0;
 
+async function checkData() {
+  console.log(
+    `Are this the real data\ntitle = ${track}\nartist = ${artist}\ntype = ${type.toUpperCase()}`
+  );
+  const anwser = readline.question("[y/n]: ").toLowerCase();
+  if (anwser === "y") {
+    continue;
+  } else if (anwser === "n") {
+    track = readline.question("Song name: ").trim();
+    artist = readline.question("Artist name: ").trim();
+    type = readline.question("Type of the song: ").trim();
+  } else {
+    console.log("Sadlly I can't continue wihout checking data");
+    fs.unlinkSync(file);
+    return process.exit(1);
+  }
+}
+
 async function getBuffer(link) {
   return axios
     .get(link, { responseType: "arraybuffer" })
@@ -18,6 +36,28 @@ async function getBuffer(link) {
 }
 
 async function main() {
+  // cleaning interface
+  process.stdout.write("\u001b[H\u001b[2J\u001b[3J");
+
+  process.on("SIGINT", () => {
+    fs.unlinkSync(file);
+  });
+
+  // checking data
+  console.log(
+    `Are this the real data\nTitle: ${track}\nArtist: ${artist}\nType: ${type.toUpperCase()}`
+  );
+  const anwser = readline.question("[y/n]: ").toLowerCase();
+  if (anwser === "y") {
+  } else if (anwser === "n") {
+    track = readline.question("Song name: ").trim();
+    artist = readline.question("Artist name: ").trim();
+  } else {
+    console.log("Sadlly I can't continue wihout checking data");
+    fs.unlinkSync(file);
+    return process.exit(1);
+  }
+
   // create output folder
   fs.mkdirSync("songs", { recursive: true });
 
@@ -37,9 +77,9 @@ async function main() {
     // Sure that will not change between track and album
     const coverBuffer = await getBuffer(data.albumCover);
     const songBuffer = fs.readFileSync(file);
-    const artist = data.artists;
+    var artist = data.artists;
     const albumName = data.albumName;
-    const title = data.title;
+    var title = data.title;
     const [year, mounth, day] = data.releaseDay.split("-");
 
     const writer = new ID3Writer(songBuffer);
@@ -57,16 +97,12 @@ async function main() {
 
     writer.addTag();
     const taggedSongBuffer = Buffer.from(writer.arrayBuffer);
-    fs.writeFile(
-      `./songs/${artist[0].replace(/[^\w\s]/gi, "")} - ${title.replace(
-        /[^\w\s]/gi,
-        ""
-      )}.mp3`,
-      taggedSongBuffer,
-      err => {
-        if (err) throw err;
-      }
-    );
+    artist = artist[0].replace(/[^\w\s]/gi, "");
+    title = title.replace(/[^\w\s]/gi, "");
+    console.log(`'title'`, typeof title);
+    fs.writeFile(`./songs/${artist} - ${title}.mp3`, taggedSongBuffer, err => {
+      if (err) throw err;
+    });
 
     fs.unlinkSync(file);
   } else {
