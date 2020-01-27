@@ -15,7 +15,6 @@ options = {
     }],
     'outtmpl': '%(id)s.%(ext)s',        # name the file the ID of the video
     'noplaylist': True,
-    "verbose": True
 }
 
 ydl = YoutubeDL(options)
