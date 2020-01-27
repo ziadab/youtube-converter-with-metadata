@@ -3,37 +3,14 @@ const axios = require("axios");
 const ID3Writer = require("browser-id3-writer");
 const fs = require("fs");
 const readline = require("readline-sync");
+const getBuffer = require("./helpers/getBuffer");
 
 const file = argv.file;
 var artist = argv.artist.trim();
 var track = argv.track.trim();
 const type = argv.type.trim();
-const youtube_title = argv.youtubeTitle.trim();
+const youtube_title = argv.youtubeTitle;
 var trying = 0;
-
-async function checkData() {
-  console.log(
-    `Are this the real data\ntitle = ${track}\nartist = ${artist}\ntype = ${type.toUpperCase()}`
-  );
-  const anwser = readline.question("[y/n]: ").toLowerCase();
-  if (anwser === "y") {
-    continue;
-  } else if (anwser === "n") {
-    track = readline.question("Song name: ").trim();
-    artist = readline.question("Artist name: ").trim();
-    type = readline.question("Type of the song: ").trim();
-  } else {
-    console.log("Sadlly I can't continue wihout checking data");
-    fs.unlinkSync(file);
-    return process.exit(1);
-  }
-}
-
-async function getBuffer(link) {
-  return axios
-    .get(link, { responseType: "arraybuffer" })
-    .then(response => Buffer.from(response.data, "binary"));
-}
 
 async function main() {
   // cleaning interface
