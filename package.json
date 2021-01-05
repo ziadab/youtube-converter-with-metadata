@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "browser-id3-writer": "^4.3.0",
     "express": "^4.17.1",
     "readline-sync": "^1.4.10",
