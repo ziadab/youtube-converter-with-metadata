@@ -11,7 +11,7 @@
   "dependencies": {
     "axios": "^0.21.1",
     "browser-id3-writer": "^4.3.0",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "readline-sync": "^1.4.10",
     "yargs": "^15.0.2"
   }
